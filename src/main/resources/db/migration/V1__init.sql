@@ -19,5 +19,5 @@ VALUES
         'Second Posts',
         'This is content of the second post',
         CURRENT_TIMESTAMP,
-        4
+        3
     );
