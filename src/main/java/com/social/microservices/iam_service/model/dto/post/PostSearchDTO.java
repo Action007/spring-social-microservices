@@ -10,11 +10,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostDTO implements Serializable {
+public class PostSearchDTO implements Serializable {
 
     private Integer id;
     private String title;
     private String content;
     private Integer likes;
     private LocalDateTime created;
+    private Boolean isDeleted;
+
 }

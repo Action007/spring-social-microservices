@@ -1,9 +1,9 @@
-package com.social.microservices.iam_service.model.entities;
+package com.social.microservices.iam_service.model.entity;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
-import jakarta.annotation.Generated;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +15,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "posts")
+@SQLRestriction("deleted = false")
 @Getter
 @Setter
 public class Post {
@@ -32,6 +33,12 @@ public class Post {
     @Column(nullable = false, updatable = false)
     private LocalDateTime created = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private LocalDateTime updated = LocalDateTime.now();
+
     @Column(nullable = false, columnDefinition = "integer default 0")
     private Integer likes = 0;
+
+    @Column(nullable = false)
+    private Boolean deleted = false;
 }
