@@ -4,10 +4,12 @@ import java.io.Serializable;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaginationResponse<T> implements Serializable {
@@ -16,6 +18,7 @@ public class PaginationResponse<T> implements Serializable {
     private Pagination pagination;
 
     @Data
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Pagination implements Serializable {

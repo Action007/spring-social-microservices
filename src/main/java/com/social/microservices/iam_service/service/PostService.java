@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import com.social.microservices.iam_service.model.dto.post.PostDTO;
 import com.social.microservices.iam_service.model.dto.post.PostSearchDTO;
 import com.social.microservices.iam_service.model.request.post.NewPostRequest;
+import com.social.microservices.iam_service.model.request.post.PostSearchRequest;
 import com.social.microservices.iam_service.model.request.post.UpdatePostRequest;
 import com.social.microservices.iam_service.model.response.IamResponse;
 import com.social.microservices.iam_service.model.response.PaginationResponse;
@@ -21,4 +22,6 @@ public interface PostService {
     void softDeletePost(@NotNull Integer postId);
 
     IamResponse<PaginationResponse<PostSearchDTO>> findAllPosts(Pageable pageable);
+
+    IamResponse<PaginationResponse<PostSearchDTO>> searchPosts(@NotNull PostSearchRequest request, Pageable pageable);
 }
