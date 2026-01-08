@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -54,6 +56,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.createUser(request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         User savedUser = userRepository.save(user);
         UserDTO userDTO = userMapper.toDto(savedUser);
 

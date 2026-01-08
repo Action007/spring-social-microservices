@@ -24,6 +24,22 @@ CREATE TABLE posts (
     UNIQUE (title)
 );
 
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    user_system_role VARCHAR(64) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT true,
+    created_by VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE users_roles (
+    user_id BIGINT NOT NULL,
+    role_id INT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (role_id) REFERENCES roles (id)
+);
+
 INSERT INTO
     users (
         username,
@@ -37,9 +53,9 @@ INSERT INTO
     )
 VALUES
     (
-        'first_user',
-        'password1',
-        'first_user@gmail.com',
+        'super_admin',
+        '$2a$10$/v4ihOXLEYPFQB79AaAKp.0.ljEELN8dSPj8E.xr389ovZ74Fsp3C',
+        'superadmin@gmail.com',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
         'ACTIVE',
@@ -47,9 +63,9 @@ VALUES
         false
     ),
     (
-        'second_user',
-        'password2',
-        'second_user@gmail.com',
+        'admin',
+        '$2a$10$gb3qwpFBPeCQuUfpf6k9.eSN7BcNkjhAdCiczWMbuMls4o7xpeL3.',
+        'admin@gmail.com',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
         'ACTIVE',
@@ -57,9 +73,9 @@ VALUES
         false
     ),
     (
-        'third_user',
-        'password3',
-        'third_user@gmail.com',
+        'user',
+        '$2a$10$FG138AjW7uha6hYwBH8UE.YFPGEhY2jgHI7I7SDdvCVUtUHHi4KmW',
+        'user@gmail.com',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,
         'ACTIVE',
@@ -96,3 +112,17 @@ VALUES
         false,
         3
     );
+
+INSERT INTO
+    roles (name, user_system_role, created_by)
+VALUES
+    ('SUPER_ADMIN', 'SUPER_ADMIN', 'SUPER_ADMIN'),
+    ('ADMIN', 'ADMIN', 'SUPER_ADMIN'),
+    ('USER', 'USER', 'SUPER_ADMIN');
+
+INSERT INTO
+    users_roles (user_id, role_id)
+VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3);
