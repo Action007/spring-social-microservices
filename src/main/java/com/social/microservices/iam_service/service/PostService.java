@@ -15,7 +15,7 @@ import jakarta.validation.constraints.NotNull;
 public interface PostService {
     IamResponse<PostDTO> getById(@NotNull Integer postId);
 
-    IamResponse<PostDTO> createPost(@NotNull NewPostRequest postRequest);
+    IamResponse<PostDTO> createPost(@NotNull Integer userId, NewPostRequest postRequest);
 
     IamResponse<PostDTO> updatePost(@NotNull Integer postId, @NotNull UpdatePostRequest updatePostRequest);
 

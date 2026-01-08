@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.social.microservices.iam_service.model.enums.RegistrationStatus;
 
@@ -16,6 +17,11 @@ import com.social.microservices.iam_service.model.enums.RegistrationStatus;
 @Setter
 @NoArgsConstructor
 public class User {
+    public static final String ID_FIELD = "id";
+    public static final String USERNAME_NAME_FIELD = "username";
+    public static final String EMAIL_NAME_FIELD = "email";
+    public static final String DELETED_FIELD = "deleted";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -32,11 +38,11 @@ public class User {
     @Column(nullable = false, length = 50)
     private String email;
 
-    @Column(nullable = false)
-    private LocalDateTime created;
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime created = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime updated;
+    private LocalDateTime updated = LocalDateTime.now();
 
     @Column()
     private LocalDateTime last_login;
@@ -47,5 +53,8 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "registration_status", nullable = false)
     private RegistrationStatus registrationStatus;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts;
 
 }

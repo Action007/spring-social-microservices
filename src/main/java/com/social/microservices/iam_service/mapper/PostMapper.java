@@ -9,6 +9,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import com.social.microservices.iam_service.model.dto.post.PostDTO;
 import com.social.microservices.iam_service.model.dto.post.PostSearchDTO;
 import com.social.microservices.iam_service.model.entity.Post;
+import com.social.microservices.iam_service.model.entity.User;
 import com.social.microservices.iam_service.model.request.post.NewPostRequest;
 import com.social.microservices.iam_service.model.request.post.UpdatePostRequest;
 
@@ -19,12 +20,15 @@ public interface PostMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
-    Post createPost(NewPostRequest postRequest);
+    @Mapping(target = "user", source = "user")
+    @Mapping(target = "createdBy", source = "user.username")
+    Post createPost(NewPostRequest postRequest, User user);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "created", ignore = true)
     void updatePost(@MappingTarget Post post, UpdatePostRequest request);
 
     @Mapping(source = "deleted", target = "isDeleted")
+    @Mapping(target = "createdBy", source = "user.username")
     PostSearchDTO toPostSearchDTO(Post post);
 }
