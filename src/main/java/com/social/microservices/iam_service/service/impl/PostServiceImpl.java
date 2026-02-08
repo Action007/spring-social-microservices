@@ -13,10 +13,9 @@ import com.social.microservices.iam_service.model.request.post.PostSearchRequest
 import com.social.microservices.iam_service.model.request.post.UpdatePostRequest;
 import com.social.microservices.iam_service.model.response.IamResponse;
 import com.social.microservices.iam_service.model.response.PaginationResponse;
-import com.social.microservices.iam_service.model.response.PaginationResponse.Pagination;
-import com.social.microservices.iam_service.repositories.PostRepository;
-import com.social.microservices.iam_service.repositories.UserRepository;
-import com.social.microservices.iam_service.repositories.criteria.PostSearchCriteria;
+import com.social.microservices.iam_service.repository.PostRepository;
+import com.social.microservices.iam_service.repository.UserRepository;
+import com.social.microservices.iam_service.repository.criteria.PostSearchCriteria;
 import com.social.microservices.iam_service.service.PostService;
 
 import jakarta.validation.constraints.NotNull;

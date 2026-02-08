@@ -1,10 +1,16 @@
 package com.social.microservices.iam_service.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +19,7 @@ import com.social.microservices.iam_service.mapper.UserMapper;
 import com.social.microservices.iam_service.model.constants.ApiErrorMessage;
 import com.social.microservices.iam_service.model.dto.user.UserDTO;
 import com.social.microservices.iam_service.model.dto.user.UserSearchDTO;
+import com.social.microservices.iam_service.model.entity.Role;
 import com.social.microservices.iam_service.model.entity.User;
 import com.social.microservices.iam_service.model.exception.DataExistException;
 import com.social.microservices.iam_service.model.exception.NotFoundException;
@@ -21,9 +28,11 @@ import com.social.microservices.iam_service.model.request.user.UpdateUserRequest
 import com.social.microservices.iam_service.model.request.user.UserSearchRequest;
 import com.social.microservices.iam_service.model.response.IamResponse;
 import com.social.microservices.iam_service.model.response.PaginationResponse;
-import com.social.microservices.iam_service.repositories.UserRepository;
-import com.social.microservices.iam_service.repositories.criteria.UserSearchCriteria;
+import com.social.microservices.iam_service.repository.RoleRepository;
+import com.social.microservices.iam_service.repository.UserRepository;
+import com.social.microservices.iam_service.repository.criteria.UserSearchCriteria;
 import com.social.microservices.iam_service.service.UserService;
+import com.social.microservices.iam_service.service.model.IamServiceUserRole;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -31,94 +40,130 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
+        private final UserRepository userRepository;
+        private final UserMapper userMapper;
+        private final PasswordEncoder passwordEncoder;
+        private final RoleRepository roleRepository;
 
-    @Override
-    @Transactional(readOnly = true)
-    public IamResponse<UserDTO> getById(@NotNull Integer userId) {
-        User user = userRepository.findByIdAndDeletedFalse(userId)
-                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+        @Override
+        @Transactional(readOnly = true)
+        public IamResponse<UserDTO> getById(@NotNull Integer userId) {
+                User user = userRepository.findByIdAndDeletedFalse(userId)
+                                .orElseThrow(() -> new NotFoundException(
+                                                ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
-        UserDTO userDto = userMapper.toDto(user);
-        return IamResponse.createSuccessful(userDto);
-    }
-
-    @Override
-    public IamResponse<UserDTO> createUser(@NotNull NewUserRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DataExistException(ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(request.getEmail()));
+                UserDTO userDto = userMapper.toDto(user);
+                return IamResponse.createSuccessful(userDto);
         }
 
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new DataExistException(ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(request.getUsername()));
+        @Override
+        public IamResponse<UserDTO> createUser(@NotNull NewUserRequest request) {
+                if (userRepository.existsByEmail(request.getEmail())) {
+                        throw new DataExistException(
+                                        ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(request.getEmail()));
+                }
+
+                if (userRepository.existsByUsername(request.getUsername())) {
+                        throw new DataExistException(
+                                        ApiErrorMessage.USER_ALREADY_EXISTS.getMessage(request.getUsername()));
+                }
+
+                Role userRole = roleRepository.findByName(IamServiceUserRole.USER.getRole())
+                                .orElseThrow(() -> new NotFoundException(
+                                                ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
+
+                User user = userMapper.createUser(request);
+                user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+                Set<Role> roles = new HashSet<>();
+                roles.add(userRole);
+                user.setRoles(roles);
+
+                User savedUser = userRepository.save(user);
+                UserDTO userDTO = userMapper.toDto(savedUser);
+
+                return IamResponse.createSuccessful(userDTO);
         }
 
-        User user = userMapper.createUser(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        User savedUser = userRepository.save(user);
-        UserDTO userDTO = userMapper.toDto(savedUser);
+        @Override
+        public IamResponse<UserDTO> updateUser(@NotNull Integer userId, @NotNull UpdateUserRequest request) {
+                User user = userRepository.findByIdAndDeletedFalse(userId)
+                                .orElseThrow(() -> new NotFoundException(
+                                                ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
-        return IamResponse.createSuccessful(userDTO);
-    }
+                userMapper.updateUser(user, request);
+                user.setUpdated(LocalDateTime.now());
+                user = userRepository.save(user);
 
-    @Override
-    public IamResponse<UserDTO> updateUser(@NotNull Integer userId, @NotNull UpdateUserRequest request) {
-        User user = userRepository.findByIdAndDeletedFalse(userId)
-                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+                UserDTO userDTO = userMapper.toDto(user);
+                return IamResponse.createSuccessful(userDTO);
+        }
 
-        userMapper.updateUser(user, request);
-        user.setUpdated(LocalDateTime.now());
-        user = userRepository.save(user);
+        @Override
+        public void softDeleteUser(Integer userId) {
+                User user = userRepository.findByIdAndDeletedFalse(userId)
+                                .orElseThrow(() -> new NotFoundException(
+                                                ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
-        UserDTO userDTO = userMapper.toDto(user);
-        return IamResponse.createSuccessful(userDTO);
-    }
+                user.setDeleted(true);
+                userRepository.save(user);
+        }
 
-    @Override
-    public void softDeleteUser(Integer userId) {
-        User user = userRepository.findByIdAndDeletedFalse(userId)
-                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+        @Override
+        public IamResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable) {
+                Page<UserSearchDTO> users = userRepository.findAll(pageable)
+                                .map(userMapper::toUserSearchDto);
 
-        user.setDeleted(true);
-        userRepository.save(user);
-    }
+                PaginationResponse<UserSearchDTO> paginationResponse = new PaginationResponse<>(
+                                users.getContent(),
+                                new PaginationResponse.Pagination(
+                                                users.getTotalElements(),
+                                                pageable.getPageSize(),
+                                                users.getNumber() + 1,
+                                                users.getTotalPages()));
 
-    @Override
-    public IamResponse<PaginationResponse<UserSearchDTO>> findAllUsers(Pageable pageable) {
-        Page<UserSearchDTO> users = userRepository.findAll(pageable)
-                .map(userMapper::toUserSearchDto);
+                return IamResponse.createSuccessful(paginationResponse);
+        }
 
-        PaginationResponse<UserSearchDTO> paginationResponse = new PaginationResponse<>(
-                users.getContent(),
-                new PaginationResponse.Pagination(
-                        users.getTotalElements(),
-                        pageable.getPageSize(),
-                        users.getNumber() + 1,
-                        users.getTotalPages()));
+        @Override
+        public IamResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest request,
+                        Pageable pageable) {
+                Specification<User> specification = new UserSearchCriteria(request);
 
-        return IamResponse.createSuccessful(paginationResponse);
-    }
+                Page<UserSearchDTO> usersPage = userRepository.findAll(specification, pageable)
+                                .map(userMapper::toUserSearchDto);
 
-    @Override
-    public IamResponse<PaginationResponse<UserSearchDTO>> searchUsers(UserSearchRequest request, Pageable pageable) {
-        Specification<User> specification = new UserSearchCriteria(request);
+                PaginationResponse<UserSearchDTO> response = PaginationResponse.<UserSearchDTO>builder()
+                                .content(usersPage.getContent())
+                                .pagination(PaginationResponse.Pagination.builder()
+                                                .total(usersPage.getTotalElements())
+                                                .limit(pageable.getPageSize())
+                                                .page(usersPage.getNumber() + 1)
+                                                .pages(usersPage.getTotalPages())
+                                                .build())
+                                .build();
 
-        Page<UserSearchDTO> usersPage = userRepository.findAll(specification, pageable)
-                .map(userMapper::toUserSearchDto);
+                return IamResponse.createSuccessful(response);
+        }
 
-        PaginationResponse<UserSearchDTO> response = PaginationResponse.<UserSearchDTO>builder()
-                .content(usersPage.getContent())
-                .pagination(PaginationResponse.Pagination.builder()
-                        .total(usersPage.getTotalElements())
-                        .limit(pageable.getPageSize())
-                        .page(usersPage.getNumber() + 1)
-                        .pages(usersPage.getTotalPages())
-                        .build())
-                .build();
+        @Override
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                return getUserDetails(username, userRepository);
+        }
 
-        return IamResponse.createSuccessful(response);
-    }
+        static UserDetails getUserDetails(String email, UserRepository userRepository) {
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new NotFoundException(
+                                                ApiErrorMessage.EMAIL_NOT_FOUND.getMessage(email)));
 
+                user.setLastLogin(LocalDateTime.now());
+                userRepository.save(user);
+
+                return new org.springframework.security.core.userdetails.User(
+                                user.getEmail(),
+                                user.getPassword(),
+                                user.getRoles().stream()
+                                                .map((role) -> new SimpleGrantedAuthority(role.getName()))
+                                                .collect(Collectors.toList()));
+        }
 }

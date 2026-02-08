@@ -1,6 +1,7 @@
 package com.social.microservices.iam_service.service;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import com.social.microservices.iam_service.model.dto.user.UserDTO;
 import com.social.microservices.iam_service.model.dto.user.UserSearchDTO;
@@ -12,7 +13,7 @@ import com.social.microservices.iam_service.model.response.PaginationResponse;
 
 import jakarta.validation.constraints.NotNull;
 
-public interface UserService {
+public interface UserService extends UserDetailsService {
 
     IamResponse<UserDTO> getById(@NotNull Integer userId);
 

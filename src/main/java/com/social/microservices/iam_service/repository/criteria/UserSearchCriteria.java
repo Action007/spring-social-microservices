@@ -1,4 +1,4 @@
-package com.social.microservices.iam_service.repositories.criteria;
+package com.social.microservices.iam_service.repository.criteria;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

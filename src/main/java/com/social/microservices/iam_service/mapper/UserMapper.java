@@ -1,5 +1,7 @@
 package com.social.microservices.iam_service.mapper;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.type.descriptor.DateTimeUtils;
@@ -8,8 +10,10 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.social.microservices.iam_service.model.dto.role.RoleDTO;
 import com.social.microservices.iam_service.model.dto.user.UserDTO;
 import com.social.microservices.iam_service.model.dto.user.UserSearchDTO;
+import com.social.microservices.iam_service.model.entity.Role;
 import com.social.microservices.iam_service.model.entity.User;
 import com.social.microservices.iam_service.model.enums.RegistrationStatus;
 import com.social.microservices.iam_service.model.request.user.NewUserRequest;
@@ -19,7 +23,7 @@ import com.social.microservices.iam_service.model.request.user.UpdateUserRequest
         RegistrationStatus.class, Objects.class, DateTimeUtils.class })
 public interface UserMapper {
 
-    @Mapping(source = "last_login", target = "lastLogin")
+    @Mapping(target = "roles", expression = "java(mapRoles(user.getRoles()))")
     UserDTO toDto(User user);
 
     @Mapping(target = "id", ignore = true)
@@ -32,6 +36,11 @@ public interface UserMapper {
     void updateUser(@MappingTarget User user, UpdateUserRequest request);
 
     @Mapping(source = "deleted", target = "isDeleted")
+    @Mapping(target = "roles", expression = "java(mapRoles(user.getRoles()))")
     UserSearchDTO toUserSearchDto(User user);
 
+    default List<RoleDTO> mapRoles(Collection<Role> roles) {
+        return roles.stream()
+                .map((role) -> new RoleDTO(role.getId(), role.getName())).toList();
+    }
 }

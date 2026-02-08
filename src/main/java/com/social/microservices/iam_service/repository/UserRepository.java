@@ -1,4 +1,4 @@
-package com.social.microservices.iam_service.repositories;
+package com.social.microservices.iam_service.repository;
 
 import java.util.Optional;
 
@@ -17,4 +17,7 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
 
     Optional<User> findByIdAndDeletedFalse(Integer id);
 
+    Optional<User> findUserByEmailAndDeletedFalse(String email);
+
+    Optional<User> findByEmail(String email);
 }

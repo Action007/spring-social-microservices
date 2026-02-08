@@ -1,4 +1,4 @@
-package com.social.microservices.iam_service.repositories;
+package com.social.microservices.iam_service.repository;
 
 import java.util.Optional;
 

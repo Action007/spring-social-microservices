@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import com.social.microservices.iam_service.model.enums.RegistrationStatus;
@@ -44,8 +45,8 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updated = LocalDateTime.now();
 
-    @Column()
-    private LocalDateTime last_login;
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
     @Column(nullable = false)
     private Boolean deleted = false;
@@ -57,4 +58,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
 
+    @ManyToMany
+    @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Collection<Role> roles;
 }

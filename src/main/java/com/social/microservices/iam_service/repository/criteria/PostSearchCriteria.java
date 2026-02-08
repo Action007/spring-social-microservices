@@ -1,4 +1,4 @@
-package com.social.microservices.iam_service.repositories.criteria;
+package com.social.microservices.iam_service.repository.criteria;
 
 import java.util.ArrayList;
 import java.util.List;

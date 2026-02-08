@@ -2,7 +2,9 @@ package com.social.microservices.iam_service.model.dto.user;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import com.social.microservices.iam_service.model.dto.role.RoleDTO;
 import com.social.microservices.iam_service.model.enums.RegistrationStatus;
 
 import lombok.AllArgsConstructor;
@@ -19,5 +21,7 @@ public class UserDTO implements Serializable {
     private String email;
     private LocalDateTime created;
     private LocalDateTime lastLogin;
+
     private RegistrationStatus registrationStatus;
+    private List<RoleDTO> roles;
 }
