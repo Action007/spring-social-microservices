@@ -1,6 +1,13 @@
 package com.social.microservices.iam_service.utils;
 
+import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpHeaders;
+
 import com.social.microservices.iam_service.model.constants.ApiConstants;
+
+import jakarta.servlet.http.Cookie;
 
 public class ApiUtils {
 
@@ -10,5 +17,18 @@ public class ApiUtils {
         } catch (Exception e) {
             return ApiConstants.UNDEFINED;
         }
+    }
+
+    public static Cookie createAuthCookie(String value) {
+        Cookie authorizationCookie = new Cookie(HttpHeaders.AUTHORIZATION, value);
+        authorizationCookie.setHttpOnly(true);
+        authorizationCookie.setSecure(true);
+        authorizationCookie.setPath("/");
+        authorizationCookie.setMaxAge(300);
+        return authorizationCookie;
+    }
+
+    public static String generateUuidWithoutDash() {
+        return UUID.randomUUID().toString().replace(ApiConstants.DASH, StringUtils.EMPTY);
     }
 }

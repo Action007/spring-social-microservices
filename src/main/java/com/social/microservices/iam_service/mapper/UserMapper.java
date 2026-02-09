@@ -12,6 +12,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.social.microservices.iam_service.model.dto.role.RoleDTO;
 import com.social.microservices.iam_service.model.dto.user.UserDTO;
+import com.social.microservices.iam_service.model.dto.user.UserProfileDTO;
 import com.social.microservices.iam_service.model.dto.user.UserSearchDTO;
 import com.social.microservices.iam_service.model.entity.Role;
 import com.social.microservices.iam_service.model.entity.User;
@@ -38,6 +39,13 @@ public interface UserMapper {
     @Mapping(source = "deleted", target = "isDeleted")
     @Mapping(target = "roles", expression = "java(mapRoles(user.getRoles()))")
     UserSearchDTO toUserSearchDto(User user);
+
+    @Mapping(target = "roles", expression = "java(mapRoles(user.getRoles()))")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "email", source = "user.email")
+    @Mapping(target = "token", source = "token")
+    @Mapping(target = "refreshToken", source = "refreshToken")
+    UserProfileDTO toUserProfileDto(User user, String token, String refreshToken);
 
     default List<RoleDTO> mapRoles(Collection<Role> roles) {
         return roles.stream()

@@ -1,5 +1,6 @@
 package com.social.microservices.iam_service.model.dto.user;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -11,7 +12,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserProfileDTO {
+public class UserProfileDTO implements Serializable {
 
     private Integer id;
     private String username;
@@ -21,5 +22,6 @@ public class UserProfileDTO {
     private LocalDateTime lastLogin;
 
     private String token;
+    private String refreshToken;
     private List<RoleDTO> roles;
 }
