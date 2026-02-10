@@ -1,22 +1,32 @@
 package com.social.microservices.iam_service.service.impl;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.social.microservices.iam_service.mapper.UserMapper;
 import com.social.microservices.iam_service.model.constants.ApiErrorMessage;
 import com.social.microservices.iam_service.model.dto.user.UserProfileDTO;
 import com.social.microservices.iam_service.model.entity.RefreshToken;
+import com.social.microservices.iam_service.model.entity.Role;
 import com.social.microservices.iam_service.model.entity.User;
 import com.social.microservices.iam_service.model.exception.InvalidDataException;
+import com.social.microservices.iam_service.model.exception.NotFoundException;
 import com.social.microservices.iam_service.model.request.user.LoginRequest;
+import com.social.microservices.iam_service.model.request.user.RegistrationUserRequest;
 import com.social.microservices.iam_service.model.response.IamResponse;
+import com.social.microservices.iam_service.repository.RoleRepository;
 import com.social.microservices.iam_service.repository.UserRepository;
 import com.social.microservices.iam_service.security.JwtTokenProvider;
+import com.social.microservices.iam_service.security.validation.AccessValidator;
 import com.social.microservices.iam_service.service.AuthService;
 import com.social.microservices.iam_service.service.RefreshTokenService;
+import com.social.microservices.iam_service.service.model.IamServiceUserRole;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -32,6 +42,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AccessValidator accessValidator;
 
     @Override
     public IamResponse<UserProfileDTO> login(@NotNull LoginRequest request) {
@@ -62,5 +75,29 @@ public class AuthServiceImpl implements AuthService {
 
         return IamResponse
                 .createSuccessfulWithNewToken(userMapper.toUserProfileDto(user, accessToken, refreshToken.getToken()));
+    }
+
+    @Override
+    public IamResponse<UserProfileDTO> registerUser(@NotNull RegistrationUserRequest request) {
+
+        accessValidator.validateNewUser(request.getUsername(), request.getEmail(), request.getPassword(),
+                request.getConfirmPassword());
+
+        Role userRole = roleRepository.findByName(IamServiceUserRole.USER.getRole())
+                .orElseThrow(() -> new NotFoundException(ApiErrorMessage.USER_ROLE_NOT_FOUND.getMessage()));
+
+        User newUser = userMapper.fromDto(request);
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        newUser.setRoles(roles);
+        userRepository.save(newUser);
+
+        RefreshToken refreshToken = refreshTokenService.generateOrUpdateRefreshToken(newUser);
+        String token = jwtTokenProvider.generateToken(newUser);
+        UserProfileDTO userProfileDTO = userMapper.toUserProfileDto(newUser, token, refreshToken.getToken());
+        userProfileDTO.setToken(token);
+
+        return IamResponse.createSuccessfulWithNewToken(userProfileDTO);
     }
 }

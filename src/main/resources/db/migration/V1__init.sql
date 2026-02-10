@@ -40,7 +40,7 @@ CREATE TABLE users_roles (
     FOREIGN KEY (role_id) REFERENCES roles (id)
 );
 
-CREATE TABLE refres_token (
+CREATE TABLE refresh_token (
     id SERIAL PRIMARY KEY,
     token VARCHAR(128) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -63,7 +63,7 @@ INSERT INTO
 VALUES
     (
         'super_admin',
-        '$2a$10$/v4ihOXLEYPFQB79AaAKp.0.ljEELN8dSPj8E.xr389ovZ74Fsp3C',
+        '$2b$10$Lk8rnv21Oby54TVnBVPkR.J4C9kX1ifc5bx0FIgWof1o0qe2cafTi',
         'superadmin@gmail.com',
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP,

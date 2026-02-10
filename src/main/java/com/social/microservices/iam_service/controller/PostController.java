@@ -20,6 +20,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Pageable;
+
+import java.security.Principal;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -47,12 +50,11 @@ public class PostController {
     }
 
     @PostMapping("${end.points.create}")
-    public ResponseEntity<IamResponse<PostDTO>> createPost(@RequestBody @Valid NewPostRequest postRequest) {
+    public ResponseEntity<IamResponse<PostDTO>> createPost(@RequestBody @Valid NewPostRequest request,
+            Principal principal) {
         log.trace(ApiLogMessage.NAME_OF_CURRENT_METHOD.getValue(), ApiUtils.getMethodName());
 
-        // TODO: replace 1 with the real user_id
-        int userId = 1;
-        IamResponse<PostDTO> response = postService.createPost(userId, postRequest);
+        IamResponse<PostDTO> response = postService.createPost(request, principal.getName());
         return ResponseEntity.ok(response);
     }
 

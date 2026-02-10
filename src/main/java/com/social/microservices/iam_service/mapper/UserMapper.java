@@ -18,6 +18,7 @@ import com.social.microservices.iam_service.model.entity.Role;
 import com.social.microservices.iam_service.model.entity.User;
 import com.social.microservices.iam_service.model.enums.RegistrationStatus;
 import com.social.microservices.iam_service.model.request.user.NewUserRequest;
+import com.social.microservices.iam_service.model.request.user.RegistrationUserRequest;
 import com.social.microservices.iam_service.model.request.user.UpdateUserRequest;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, imports = {
@@ -46,6 +47,11 @@ public interface UserMapper {
     @Mapping(target = "token", source = "token")
     @Mapping(target = "refreshToken", source = "refreshToken")
     UserProfileDTO toUserProfileDto(User user, String token, String refreshToken);
+
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "registrationStatus", expression = "java(RegistrationStatus.ACTIVE)")
+    User fromDto(RegistrationUserRequest user);
 
     default List<RoleDTO> mapRoles(Collection<Role> roles) {
         return roles.stream()

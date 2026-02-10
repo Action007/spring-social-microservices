@@ -16,12 +16,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.social.microservices.iam_service.security.filter.JwtRequestFilter;
+import com.social.microservices.iam_service.security.handler.AccessRestrictionHandler;
 import com.social.microservices.iam_service.service.UserService;
+import com.social.microservices.iam_service.service.model.IamServiceUserRole;
 
 import lombok.RequiredArgsConstructor;
 
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.http.HttpMethod.POST;
 
@@ -32,6 +36,7 @@ import static org.springframework.http.HttpMethod.POST;
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
+    private final AccessRestrictionHandler accessRestrictionHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,11 +45,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(OPTIONS, "/**").permitAll() // CORS preflight
+                        .requestMatchers(OPTIONS, "/**").permitAll()
                         .requestMatchers(POST, "/auth/login", "/auth/register").permitAll()
+                        .requestMatchers(GET, "/auth/refresh/token").permitAll()
+                        // .requestMatchers(GET,
+                        // "/users/all").hasAnyAuthority(adminAccessSecurityRoles())
+                        // .requestMatchers(GET,
+                        // "/posts/all").hasAnyAuthority(adminAccessSecurityRoles())
+                        .requestMatchers(POST, "/users/create").hasAnyAuthority(adminAccessSecurityRoles())
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler(accessRestrictionHandler))
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -66,5 +78,12 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    private String[] adminAccessSecurityRoles() {
+        return new String[] {
+                IamServiceUserRole.SUPER_ADMIN.name(),
+                IamServiceUserRole.ADMIN.name()
+        };
     }
 }

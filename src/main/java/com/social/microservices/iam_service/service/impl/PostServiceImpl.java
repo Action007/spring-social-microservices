@@ -16,6 +16,7 @@ import com.social.microservices.iam_service.model.response.PaginationResponse;
 import com.social.microservices.iam_service.repository.PostRepository;
 import com.social.microservices.iam_service.repository.UserRepository;
 import com.social.microservices.iam_service.repository.criteria.PostSearchCriteria;
+import com.social.microservices.iam_service.security.validation.AccessValidator;
 import com.social.microservices.iam_service.service.PostService;
 
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +34,7 @@ public class PostServiceImpl implements PostService {
         private final PostRepository postRepository;
         private final UserRepository userRepository;
         private final PostMapper postMapper;
+        private final AccessValidator accessValidator;
 
         @Override
         public IamResponse<PostDTO> getById(@NotNull Integer postId) {
@@ -46,17 +48,20 @@ public class PostServiceImpl implements PostService {
         }
 
         @Override
-        public IamResponse<PostDTO> createPost(@NotNull Integer userId, NewPostRequest request) {
+        public IamResponse<PostDTO> createPost(@NotNull NewPostRequest request, String username) {
                 if (postRepository.existsByTitle(request.getTitle())) {
                         throw new DataExistException(
                                         ApiErrorMessage.POST_ALREADY_EXISTS.getMessage(request.getTitle()));
                 }
 
-                User user = userRepository.findById(userId)
+                User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new NotFoundException(
-                                                ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+                                                ApiErrorMessage.USERNAME_NOT_FOUND.getMessage(username)));
 
-                Post post = postMapper.createPost(request, user);
+                Post post = postMapper.createPost(request);
+                post.setUser(user);
+                post.setCreatedBy(username);
+
                 Post savedPost = postRepository.save(post);
                 PostDTO postDto = postMapper.toPostDTO(savedPost);
 
@@ -68,6 +73,13 @@ public class PostServiceImpl implements PostService {
                 Post post = postRepository.findByIdAndDeletedFalse(postId)
                                 .orElseThrow(() -> new NotFoundException(
                                                 ApiErrorMessage.POST_NOT_FOUND_BY_ID.getMessage(postId)));
+
+                accessValidator.validateAdminOrOwnerAccess(post.getUser().getId());
+
+                if (postRepository.existsByTitle(request.getTitle())) {
+                        throw new DataExistException(
+                                        ApiErrorMessage.POST_ALREADY_EXISTS.getMessage(request.getTitle()));
+                }
 
                 postMapper.updatePost(post, request);
                 post.setUpdated(LocalDateTime.now());
@@ -83,6 +95,8 @@ public class PostServiceImpl implements PostService {
                 Post post = postRepository.findByIdAndDeletedFalse(postId)
                                 .orElseThrow(() -> new NotFoundException(
                                                 ApiErrorMessage.POST_NOT_FOUND_BY_ID.getMessage(postId)));
+
+                accessValidator.validateAdminOrOwnerAccess(post.getUser().getId());
 
                 post.setDeleted(true);
                 postRepository.save(post);

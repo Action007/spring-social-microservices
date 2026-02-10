@@ -12,7 +12,7 @@ public enum ApiErrorMessage {
     POST_ALREADY_EXISTS("Post with the title: '%s' already exists."),
     USER_NOT_FOUND_BY_ID("User with ID: '%s' not found."),
     EMAIL_ALREADY_EXISTS("Email: '%s' already exists."),
-    USER_ALREADY_EXISTS("Username: '%s' already exists."),
+    USERNAME_ALREADY_EXISTS("Username: '%s' already exists."),
     USER_ROLE_NOT_FOUND("User Role not found."),
     EMAIL_NOT_FOUND("Email: '%s' not found."),
     USERNAME_NOT_FOUND("Username: '%s' not found."),
@@ -26,6 +26,15 @@ public enum ApiErrorMessage {
     INVALID_USER_OR_PASSWORD("Invalid email or password. Try again"),
     INVALID_USER_REGISTRATION_STATUS("Invalid user registration status: %s. "),
     NOT_FOUND_REFRESH_TOKEN("Refresh token not found."),
+
+    MISMATCH_PASSWORDS("Password does not match"),
+    INVALID_PASSWORD("Invalid password. It must have: "
+            + "length at least " + ApiConstants.REQUIRED_MIN_PASSWORD_LENGTH + ", including "
+            + ApiConstants.REQUIRED_MIN_LETTERS_NUMBER_EVERY_CASE_IN_PASSWORD + " letter(s) in upper and lower cases, "
+            + ApiConstants.REQUIRED_MIN_CHARACTERS_NUMBER_IN_PASSWORD + " character(s), "
+            + ApiConstants.REQUIRED_MIN_DIGITS_NUMBER_IN_PASSWORD + " digit(s). "),
+
+    HAVE_NO_ACCESS("You don't have the necessary permissions"),
     ;
 
     private final String message;

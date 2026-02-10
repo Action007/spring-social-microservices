@@ -31,6 +31,7 @@ import com.social.microservices.iam_service.model.response.PaginationResponse;
 import com.social.microservices.iam_service.repository.RoleRepository;
 import com.social.microservices.iam_service.repository.UserRepository;
 import com.social.microservices.iam_service.repository.criteria.UserSearchCriteria;
+import com.social.microservices.iam_service.security.validation.AccessValidator;
 import com.social.microservices.iam_service.service.UserService;
 import com.social.microservices.iam_service.service.model.IamServiceUserRole;
 
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserService {
         private final UserMapper userMapper;
         private final PasswordEncoder passwordEncoder;
         private final RoleRepository roleRepository;
+        private final AccessValidator accessValidator;
 
         @Override
         @Transactional(readOnly = true)
@@ -65,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
                 if (userRepository.existsByUsername(request.getUsername())) {
                         throw new DataExistException(
-                                        ApiErrorMessage.USER_ALREADY_EXISTS.getMessage(request.getUsername()));
+                                        ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(request.getUsername()));
                 }
 
                 Role userRole = roleRepository.findByName(IamServiceUserRole.USER.getRole())
@@ -91,6 +93,18 @@ public class UserServiceImpl implements UserService {
                                 .orElseThrow(() -> new NotFoundException(
                                                 ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
 
+                accessValidator.validateAdminOrOwnerAccess(userId);
+
+                if (userRepository.existsByEmail(request.getEmail())) {
+                        throw new DataExistException(
+                                        ApiErrorMessage.EMAIL_ALREADY_EXISTS.getMessage(request.getEmail()));
+                }
+
+                if (userRepository.existsByUsername(request.getUsername())) {
+                        throw new DataExistException(
+                                        ApiErrorMessage.USERNAME_ALREADY_EXISTS.getMessage(request.getUsername()));
+                }
+
                 userMapper.updateUser(user, request);
                 user.setUpdated(LocalDateTime.now());
                 user = userRepository.save(user);
@@ -104,6 +118,8 @@ public class UserServiceImpl implements UserService {
                 User user = userRepository.findByIdAndDeletedFalse(userId)
                                 .orElseThrow(() -> new NotFoundException(
                                                 ApiErrorMessage.USER_NOT_FOUND_BY_ID.getMessage(userId)));
+
+                accessValidator.validateAdminOrOwnerAccess(userId);
 
                 user.setDeleted(true);
                 userRepository.save(user);

@@ -12,7 +12,7 @@ public enum IamServiceUserRole {
 
     private final String role;
 
-    private static IamServiceUserRole fromName(String name) {
+    public static IamServiceUserRole fromName(String name) {
         return IamServiceUserRole.valueOf(name.toUpperCase());
     }
 }
